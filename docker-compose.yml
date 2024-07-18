@@ -1,0 +1,48 @@
+services:
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_PORT}:5432"
+    restart: unless-stopped
+
+  app:
+    # build: .
+    image: node:16
+    profiles:
+      - dev
+    volumes:
+      - ./:/home/node/app:z
+    working_dir: /home/node/app
+    command: 'npm run start:dev'
+    user: node
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      - postgres
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+  app-prod:
+    build: .
+    profiles:
+      - prod
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      - postgres
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
